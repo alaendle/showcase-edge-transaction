@@ -28,85 +28,39 @@ size_t messagesReceivedByInput1Queue = 0;
 // pipeline function is confirmed.
 static void SendConfirmationCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void* userContextCallback)
 {
-    // The context corresponds to which message# we were at when we sent.
-    MESSAGE_INSTANCE* messageInstance = (MESSAGE_INSTANCE*)userContextCallback;
-    printf("Confirmation[%zu] received for message with result = %d\r\n", messageInstance->messageTrackingId, result);
-    IoTHubMessage_Destroy(messageInstance->messageHandle);
-    free(messageInstance);
 }
 
-// Allocates a context for callback and clones the message
-// NOTE: The message MUST be cloned at this stage.  InputQueue1Callback's caller always frees the message
-// so we need to pass down a new copy.
-static MESSAGE_INSTANCE* CreateMessageInstance(IOTHUB_MESSAGE_HANDLE message)
+static unsigned char *bytearray_to_str(const unsigned char *buffer, size_t len)
 {
-    MESSAGE_INSTANCE* messageInstance = (MESSAGE_INSTANCE*)malloc(sizeof(MESSAGE_INSTANCE));
-    if (NULL == messageInstance)
-    {
-        printf("Failed allocating 'MESSAGE_INSTANCE' for pipelined message\r\n");
-    }
-    else
-    {
-        memset(messageInstance, 0, sizeof(*messageInstance));
-
-        if ((messageInstance->messageHandle = IoTHubMessage_Clone(message)) == NULL)
-        {
-            free(messageInstance);
-            messageInstance = NULL;
-        }
-        else
-        {
-            messageInstance->messageTrackingId = messagesReceivedByInput1Queue;
-        }
-    }
-
-    return messageInstance;
+    unsigned char *ret = (unsigned char *)malloc(len + 1);
+    memcpy(ret, buffer, len);
+    ret[len] = '\0';
+    return ret;
 }
 
 static IOTHUBMESSAGE_DISPOSITION_RESULT InputQueue1Callback(IOTHUB_MESSAGE_HANDLE message, void* userContextCallback)
 {
-    IOTHUBMESSAGE_DISPOSITION_RESULT result;
-    IOTHUB_CLIENT_RESULT clientResult;
-    IOTHUB_MODULE_CLIENT_LL_HANDLE iotHubModuleClientHandle = (IOTHUB_MODULE_CLIENT_LL_HANDLE)userContextCallback;
-
     unsigned const char* messageBody;
     size_t contentSize;
 
-    if (IoTHubMessage_GetByteArray(message, &messageBody, &contentSize) != IOTHUB_MESSAGE_OK)
+    if (IoTHubMessage_GetByteArray(message, &messageBody, &contentSize) == IOTHUB_MESSAGE_OK)
+    {
+        messageBody = bytearray_to_str(messageBody, contentSize);
+    } else
     {
         messageBody = "<null>";
     }
 
-    printf("Received Message [%zu]\r\n Data: [%s]\r\n", 
-            messagesReceivedByInput1Queue, messageBody);
-
-    // This message should be sent to next stop in the pipeline, namely "output1".  What happens at "outpu1" is determined
-    // by the configuration of the Edge routing table setup.
-    MESSAGE_INSTANCE *messageInstance = CreateMessageInstance(message);
-    if (NULL == messageInstance)
-    {
-        result = IOTHUBMESSAGE_ABANDONED;
+    // simulate crashes - never accept message "50"
+    if(strcmp("50", messageBody) == 0) {
+        exit(99);
     }
-    else
-    {
-        printf("Sending message (%zu) to the next stage in pipeline\n", messagesReceivedByInput1Queue);
 
-        clientResult = IoTHubModuleClient_LL_SendEventToOutputAsync(iotHubModuleClientHandle, messageInstance->messageHandle, "output1", SendConfirmationCallback, (void *)messageInstance);
-        if (clientResult != IOTHUB_CLIENT_OK)
-        {
-            IoTHubMessage_Destroy(messageInstance->messageHandle);
-            free(messageInstance);
-            printf("IoTHubModuleClient_LL_SendEventToOutputAsync failed on sending msg#=%zu, err=%d\n", messagesReceivedByInput1Queue, clientResult);
-            result = IOTHUBMESSAGE_ABANDONED;
-        }
-        else
-        {
-            result = IOTHUBMESSAGE_ACCEPTED;
-        }
-    }
+    printf("Received Data: [%s]\r\n", messageBody);
+
 
     messagesReceivedByInput1Queue++;
-    return result;
+    return IOTHUBMESSAGE_ACCEPTED;
 }
 
 static IOTHUB_MODULE_CLIENT_LL_HANDLE InitializeConnection()
@@ -167,7 +121,7 @@ void iothub_module()
     if ((iotHubModuleClientHandle = InitializeConnection()) != NULL && SetupCallbacksForModule(iotHubModuleClientHandle) == 0)
     {
         // The receiver just loops constantly waiting for messages.
-        printf("Waiting for incoming messages.\r\n");
+        // - printf("Waiting for incoming messages.\r\n");
         while (true)
         {
             IoTHubModuleClient_LL_DoWork(iotHubModuleClientHandle);

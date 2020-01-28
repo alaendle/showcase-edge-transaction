@@ -31,7 +31,7 @@ static void SendConfirmationCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, v
 {
     // The context corresponds to which message# we were at when we sent.
     // MESSAGE_INSTANCE* messageInstance = (MESSAGE_INSTANCE*)userContextCallback;
-    printf("Confirmation received with result = %d\r\n", result);
+    // - printf("Confirmation received with result = %d\r\n", result);
     //IoTHubMessage_Destroy(messageInstance->messageHandle);
     //free(messageInstance);
 }
@@ -172,10 +172,12 @@ void iothub_module()
         while (true)
         {
             IoTHubModuleClient_LL_DoWork(iotHubModuleClientHandle);
-            ThreadAPI_Sleep(100);
+            ThreadAPI_Sleep(1000);
 
             char buffer [50];
             sprintf (buffer, "%d", messagesSend++);
+
+            printf("Send Data: [%s]\r\n", buffer);
 
             IOTHUB_MESSAGE_HANDLE *messageHandle = IoTHubMessage_CreateFromString(buffer);
             IOTHUB_CLIENT_RESULT clientResult = IoTHubModuleClient_LL_SendEventToOutputAsync(iotHubModuleClientHandle, messageHandle, "output1", SendConfirmationCallback, (void *)messageHandle);
