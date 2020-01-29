@@ -74,6 +74,16 @@
               "image": "mcr.microsoft.com/azureiotedge-simulated-temperature-sensor:1.0",
               "createOptions": {}
             }
+          },
+          "SharpSink": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.SharpSink.debug}",
+              "createOptions": {}
+            }
           }
         }
       }
@@ -83,7 +93,8 @@
         "schemaVersion": "1.0",
         "routes": {
           "SourceToIoTHub": "FROM /messages/modules/Source/outputs/* INTO $upstream",
-          "sensorToSource": "FROM /messages/modules/SimulatedTemperatureSensor/outputs/temperatureOutput INTO BrokeredEndpoint(\"/modules/Source/inputs/input1\")"
+          "sensorToSource": "FROM /messages/modules/SimulatedTemperatureSensor/outputs/temperatureOutput INTO BrokeredEndpoint(\"/modules/Source/inputs/input1\")",
+          "SharpSinkToIoTHub": "FROM /messages/modules/SharpSink/outputs/* INTO $upstream"
         },
         "storeAndForwardConfiguration": {
           "timeToLiveSecs": 7200

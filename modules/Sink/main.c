@@ -53,6 +53,7 @@ static IOTHUBMESSAGE_DISPOSITION_RESULT InputQueue1Callback(IOTHUB_MESSAGE_HANDL
 
     // simulate crashes - never accept message "50"
     if(strcmp("50", messageBody) == 0) {
+        printf("CRASH!");
         exit(99);
     }
 

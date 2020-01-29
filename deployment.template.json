@@ -16,9 +16,15 @@
           "edgeAgent": {
             "type": "docker",
             "env": {
-              "https_proxy": { "value": "http://172.17.0.1:3128/" },
-              "http_proxy": { "value": "http://172.17.0.1:3128/" },
-              "UpstreamProtocol": { "value": "AmqpWs" }
+              "https_proxy": {
+                "value": "http://172.17.0.1:3128/"
+              },
+              "http_proxy": {
+                "value": "http://172.17.0.1:3128/"
+              },
+              "UpstreamProtocol": {
+                "value": "AmqpWs"
+              }
             },
             "settings": {
               "image": "mcr.microsoft.com/azureiotedge-agent:1.0",
@@ -30,15 +36,26 @@
             "status": "running",
             "restartPolicy": "always",
             "env": {
-              "https_proxy": { "value": "http://172.17.0.1:3128/" },
-              "http_proxy": { "value": "http://172.17.0.1:3128/" },
-              "UpstreamProtocol": { "value": "AmqpWs" }
+              "RuntimeLogLevel": {
+                "value": "debug"
+              },
+              "https_proxy": {
+                "value": "http://172.17.0.1:3128/"
+              },
+              "http_proxy": {
+                "value": "http://172.17.0.1:3128/"
+              },
+              "UpstreamProtocol": {
+                "value": "AmqpWs"
+              }
             },
             "settings": {
               "image": "mcr.microsoft.com/azureiotedge-hub:1.0",
               "createOptions": {
                 "HostConfig": {
-                  "Dns": [ "10.41.230.200" ],
+                  "Dns": [
+                    "10.41.230.200"
+                  ],
                   "PortBindings": {
                     "5671/tcp": [
                       {
@@ -81,6 +98,16 @@
               "image": "${MODULES.Sink}",
               "createOptions": {}
             }
+          },
+          "SharpSink": {
+            "version": "1.0",
+            "type": "docker",
+            "status": "running",
+            "restartPolicy": "always",
+            "settings": {
+              "image": "${MODULES.SharpSink}",
+              "createOptions": {}
+            }
           }
         }
       }
@@ -89,7 +116,8 @@
       "properties.desired": {
         "schemaVersion": "1.0",
         "routes": {
-          "SourceToSink": "FROM /messages/modules/Source/outputs/* INTO BrokeredEndpoint(\"/modules/Sink/inputs/input1\")"
+          "SourceToSink": "FROM /messages/modules/Source/outputs/* INTO BrokeredEndpoint(\"/modules/Sink/inputs/input1\")",
+          "SharpSinkToIoTHub": "FROM /messages/modules/SharpSink/outputs/* INTO $upstream"
         },
         "storeAndForwardConfiguration": {
           "timeToLiveSecs": 7200
