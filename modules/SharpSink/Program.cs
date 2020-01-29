@@ -73,18 +73,10 @@ namespace SharpSink
             string messageString = Encoding.UTF8.GetString(messageBytes);
             Console.WriteLine($"Received message: {counterValue}, Body: [{messageString}]");
 
-            if (!string.IsNullOrEmpty(messageString))
+            if ("50".Equals(messageString))
             {
-                using (var pipeMessage = new Message(messageBytes))
-                {
-                    foreach (var prop in message.Properties)
-                    {
-                        pipeMessage.Properties.Add(prop.Key, prop.Value);
-                    }
-                    await moduleClient.SendEventAsync("output1", pipeMessage);
-                
-                    Console.WriteLine("Received message sent");
-                }
+                Environment.Exit(99);
+                //throw new Exception("CRASH");
             }
             return MessageResponse.Completed;
         }
