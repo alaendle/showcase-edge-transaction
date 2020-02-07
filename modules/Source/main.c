@@ -39,8 +39,8 @@ static IOTHUB_MODULE_CLIENT_LL_HANDLE InitializeConnection()
     else
     {
         // Uncomment the following lines to enable verbose logging.
-        // bool traceOn = true;
-        // IoTHubModuleClient_LL_SetOption(iotHubModuleClientHandle, OPTION_LOG_TRACE, &trace);
+        bool traceOn = true;
+        IoTHubModuleClient_LL_SetOption(iotHubModuleClientHandle, OPTION_LOG_TRACE, &traceOn);
     }
 
     return iotHubModuleClientHandle;
